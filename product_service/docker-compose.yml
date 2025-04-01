@@ -1,0 +1,28 @@
+
+services:
+  product-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: product-service
+    command: 'python manage.py runserver 0.0.0.0:8080'
+    volumes:
+      - ./app:/app
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    networks:
+      - my_network
+    restart: always
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'python consumer.py'
+
+
+networks:
+  my_network:
+    external: true

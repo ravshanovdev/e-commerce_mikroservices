@@ -1,0 +1,27 @@
+
+services:
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-service
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    networks:
+      - my_network
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: queue
+    command: 'python consumer.py'
+
+networks:
+  my_network:
+    external: true
