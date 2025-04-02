@@ -10,7 +10,8 @@ from .serializers import UserSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
+from .serializers import ProductSerializer, CategorySerializer
+from .models import Product, Category
 
 User = get_user_model()
 
@@ -47,3 +48,27 @@ class VerifyTokenView(APIView):
 
     def get(self, request):
         return Response({"user": request.user.id, "email": request.user.email})
+
+
+class ProductApiView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        products = Product.objects.all()
+
+        serializer = ProductSerializer(products, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CategoryApiView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        category = Category.objects.all()
+
+        serializer = ProductSerializer(category, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
