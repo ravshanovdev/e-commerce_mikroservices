@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .serializers import ProductSerializer, CategorySerializer
 from .models import Product, Category
+from consumer import send_user_created_event, send_token_event
 
 User = get_user_model()
 
@@ -24,7 +25,13 @@ class UserRegister(APIView):
         serializer = UserSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            send_user_created_event({
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            })
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -41,34 +48,21 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+    def post(self, request, *args, **kwargs):
+        # Token olish
+        response = super().post(request, *args, **kwargs)
 
-class VerifyTokenView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        return Response({"user": request.user.id, "email": request.user.email})
-
-
-class ProductApiView(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        products = Product.objects.all()
-
-        serializer = ProductSerializer(products, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if response.status_code == 200:
+            # Token olish muvaffaqiyatli bo'lsa, RabbitMQ'ga xabar yuborish
+            data = response.data
+            send_token_event({
+                "username": request.data['username'],
+                "token": data['access']
+            })
+            print(data['access'])
+        return response
 
 
-class CategoryApiView(APIView):
-    permission_classes = [AllowAny]
 
-    def get(self, request):
-        category = Category.objects.all()
-
-        serializer = ProductSerializer(category, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
