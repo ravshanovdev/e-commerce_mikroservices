@@ -1,9 +1,11 @@
+import jwt
+from django.conf import settings
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from .serializers import CategorySerializer, ProductSerializer
+from .serializers import CategorySerializer, ProductListSerializer, ProductSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Product, Category
 from .permissions import IsAuthenticatedCustom
@@ -13,17 +15,22 @@ from rest_framework.authentication import TokenAuthentication
 AUTH_SERVICE_URL = "http://localhost:8000/accounts/api/token/verify/"
 
 
+def decode_token(token):
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        return payload.get("user_id")
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
 def create_product(request):
-    auth_header = request.headers.get("Authorization", "")
 
-    if auth_header.startswith("Bearer "):
-        token = auth_header.split(' ')[1]
-    else:
-        token = None
+    token = request.headers.get("Authorization", "").replace('Bearer ', '')
     print(token)
-    print('token topilmadi')
     if token is None:
         return Response({"detail": "Token topilmadi"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -33,10 +40,16 @@ def create_product(request):
         return Response({"detail": "Token noto'g'ri yoki foydalanuvchi mavjud emas"},
                         status=status.HTTP_401_UNAUTHORIZED)
 
+    user_id = decode_token(token)
+    if not user_id:
+        return Response({"detail": "Foydalanuvchi aniqlanmadi"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    data = request.data.copy()
+    data['user_id'] = user_id
+
     serializer = ProductSerializer(data=request.data)
-    print('token')
     if serializer.is_valid():
-        serializer.save()
+        serializer.save(user_id=user_id)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -51,12 +64,12 @@ class ProductListApiView(APIView):
         if not product:
             return Response({"error": "product not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = ProductSerializer(product, many=True)
+        serializer = ProductListSerializer(product, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CreateCategoryApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = CategorySerializer(data=request.data)
