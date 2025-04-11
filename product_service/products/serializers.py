@@ -22,7 +22,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['user_id', 'name', 'description', 'price', 'stock', 'category']
+        fields = ['id', 'user_id', 'name', 'description', 'price', 'stock', 'category']
 
 
 # bu ProductListSerializer ni takomilashtirish kerak yani user_id ga nafaqat

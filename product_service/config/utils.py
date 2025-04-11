@@ -1,4 +1,5 @@
 import requests
+import jwt
 from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -15,3 +16,13 @@ def verify_jwt_token(token):
         raise AuthenticationFailed("Invalid token")
     except requests.RequestException:
         raise AuthenticationFailed("Auth Service not available")
+
+
+def decode_token(token):
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        return payload.get("user_id")
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
