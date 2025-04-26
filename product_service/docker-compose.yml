@@ -6,7 +6,7 @@ services:
     container_name: product-service
     command: 'python manage.py runserver 0.0.0.0:8080'
     volumes:
-      - ./app:/app
+      - ./product_service:/app
     ports:
       - "8080:8080"
     env_file:
