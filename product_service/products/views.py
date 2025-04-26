@@ -59,3 +59,15 @@ class CategoryListApiView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class GetProductAPiView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, product_id):
+        product = Product.objects.get(id=product_id)
+
+        if not product:
+            return Response({"error": "Product Not Found.!"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ProductSerializer(product)
+
+        return Response(serializer.data)
