@@ -1,5 +1,4 @@
-
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -114,8 +113,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STRIPE_PUBLIC_KEY = 'pk_test_51RI6mHGbpgltfzxWTLhkLhcbbDBpjClfJ478NoeaZlKibe83y1UFoGIFnBlTEMqNWI2252VDh5YViT0nGoRAPpR800dtFGd1UV'
-STRIPE_SECRET_KEY = 'sk_test_51RI6mHGbpgltfzxWKeBfTeoQjlEgYGpP8AFhG1gADXrJQXC3ANwNT2FIzyoysWzLrXptV6qFFPweNMLfESGic8BJ00ny2qbfUw'
-STRIPE_WEBHOOK_SECRET = 'whsec_AgXxdJF8cGeNkfUdCPxb8Pn60oGU1RMH'
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+
+
 
 
